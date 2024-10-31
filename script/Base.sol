@@ -14,28 +14,28 @@ abstract contract Base is Script {
     uint256 selectedFork;
 
     function _deployRecovery() internal {
-        selectedFork = vm.createSelectFork(vm.rpcUrl(original_chain));
-        require(targetedContract.code.length > 0, "!contract"); // ensure contract
+        selectedFork = vm.createSelectFork(vm.rpcUrl(ORIGINAL_CHAIN));
+        require(TARGETED_CONTRACT.code.length > 0, "!contract"); // ensure contract
         require(
-            computeCreateAddress(broadcaster, targetedNonce) ==
-                targetedContract,
+            computeCreateAddress(BROADCASTER, TARGETED_NONCE) ==
+                TARGETED_CONTRACT,
             "!computeTarget"
         );
 
-        selectedFork = vm.createSelectFork(vm.rpcUrl(rescue_chain));
-        uint256 deployerNonce = vm.getNonce(broadcaster);
-        require(deployerNonce <= targetedNonce, "!nonce");
+        selectedFork = vm.createSelectFork(vm.rpcUrl(TARGETED_CHAIN));
+        uint256 deployerNonce = vm.getNonce(BROADCASTER);
+        require(deployerNonce <= TARGETED_NONCE, "!nonce");
 
         uint256 txCount = deployerNonce;
 
-        vm.startBroadcast(broadcaster);
-        while (txCount <= targetedNonce) {
-            if (txCount == targetedNonce) {
+        vm.startBroadcast(BROADCASTER);
+        while (txCount <= TARGETED_NONCE) {
+            if (txCount == TARGETED_NONCE) {
                 // deploy recovery contract
-                recovery = new Recovery(broadcaster);
+                recovery = new Recovery(BROADCASTER);
             } else {
                 // send self transaction
-                (bool success, ) = broadcaster.call{value: 0}("");
+                (bool success, ) = BROADCASTER.call{value: 0}("");
                 require(success, "!SELF");
             }
             txCount++;
@@ -45,18 +45,18 @@ abstract contract Base is Script {
         console.log("> Deployed Recovery:", address(recovery));
 
         require(
-            address(recovery) == targetedContract &&
+            address(recovery) == TARGETED_CONTRACT &&
                 address(recovery) != address(0),
             "!target"
         );
     }
 
     function _recoverNative() public {
-        if (selectedFork == 0) vm.createSelectFork(vm.rpcUrl(rescue_chain));
+        if (selectedFork == 0) vm.createSelectFork(vm.rpcUrl(TARGETED_CHAIN));
 
         require(address(recovery) != address(0), "0 recovery");
         uint balance = recovery.owner().balance;
-        vm.startBroadcast(broadcaster);
+        vm.startBroadcast(BROADCASTER);
         recovery.recoverNative();
         vm.stopBroadcast();
         uint256 difference = recovery.owner().balance - balance;
@@ -72,7 +72,7 @@ abstract contract Base is Script {
     }
 
     function _recoverERC20() public {
-        if (selectedFork == 0) vm.createSelectFork(vm.rpcUrl(rescue_chain));
+        if (selectedFork == 0) vm.createSelectFork(vm.rpcUrl(TARGETED_CHAIN));
 
         uint256 length = tokens.length;
         require(address(recovery) != address(0), "0 recovery");
@@ -89,7 +89,7 @@ abstract contract Base is Script {
             balances[i] = IERC20(tokens[i]).balanceOf(owner);
         }
 
-        vm.startBroadcast(broadcaster);
+        vm.startBroadcast(BROADCASTER);
         recovery.recoverERC20(tokens);
 
         console.log("> Recovered ERC20 tokens:");
