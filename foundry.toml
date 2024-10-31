@@ -1,0 +1,17 @@
+[profile.default]
+solc = "0.8.15"
+bytecode_hash = "none"
+optimizer_runs = 1000000
+
+[profile.intense.fuzz]
+runs = 10000
+
+[rpc_endpoints]
+  arb = "https://arbitrum.drpc.org"
+  avax = "https://avalanche.drpc.org"
+  base = "https://mainnet.base.org"
+  bsc = "https://bsc-dataseed1.defibit.io"
+  gnosis = "https://rpc.gnosischain.com"
+  eth = "https://rpc.mevblocker.io"
+  op = "https://op-pokt.nodies.app"
+  polygon = "https://rpc.ankr.com/polygon"
