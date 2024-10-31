@@ -30,7 +30,7 @@ This means funds sent to a contract address on Chain A can be recovered on Chain
 
 - [Foundry](https://book.getfoundry.sh/getting-started/installation)
 - Git
-- Private key with enough native tokens for deployment (not need simulation)
+- Private key with enough native tokens for deployment (optional)
 
 ### Installation
 
