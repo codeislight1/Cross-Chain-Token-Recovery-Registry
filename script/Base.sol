@@ -2,21 +2,23 @@
 pragma solidity 0.8.28;
 
 import {Recovery} from "../src/Recovery.sol";
+import {IRecovery} from "../src/interfaces/IRecovery.sol";
 import {console} from "forge-std/src/console.sol";
 import {IERC20} from "forge-std/src/interfaces/IERC20.sol";
+import {IERC721} from "forge-std/src/interfaces/IERC721.sol";
+import {IERC1155} from "forge-std/src/interfaces/IERC1155.sol";
 import {Script} from "../lib/forge-std/src/Script.sol";
 import "./constants.sol";
 
 abstract contract Base is Script {
     // Storage
-    address[] tokens;
     Recovery recovery;
     uint256 selectedFork;
 
     function _deployRecovery() internal {
         selectedFork = vm.createSelectFork(vm.rpcUrl(ORIGINAL_CHAIN));
         require(TARGETED_CONTRACT.code.length > 0, "!contract"); // ensure contract
-        require(computeCreateAddress(BROADCASTER, TARGETED_NONCE) == TARGETED_CONTRACT, "!computeTarget");
+        require(vm.computeCreateAddress(BROADCASTER, TARGETED_NONCE) == TARGETED_CONTRACT, "!computeTarget");
 
         selectedFork = vm.createSelectFork(vm.rpcUrl(TARGETED_CHAIN));
         uint256 deployerNonce = vm.getNonce(BROADCASTER);
@@ -58,15 +60,15 @@ abstract contract Base is Script {
         console.log("> Recovered Native: %s.%s %s", wholePart, decimalPart, _getChainTicker());
     }
 
-    function _recoverERC20() public {
+    function _recoverERC20(address[] memory tokens) public {
         if (selectedFork == 0) vm.createSelectFork(vm.rpcUrl(TARGETED_CHAIN));
 
-        uint256 length = tokens.length;
         require(address(recovery) != address(0), "0 recovery");
-        require(length > 0, "zero length");
+        uint256 length = tokens.length;
+        require(length > 0, "erc20 zero length");
 
         for (uint256 i; i < length; i++) {
-            require(tokens[i] != address(0), "token 0 address");
+            require(tokens[i] != address(0), "ERC20 token 0 address");
         }
 
         uint256[] memory balances = new uint256[](length);
@@ -104,5 +106,64 @@ abstract contract Base is Script {
         if (chainId == 42161) return "ETH"; // Arbitrum
 
         return "";
+    }
+
+    function _recoverERC721(IRecovery.ERC721Data[] memory inputs) public {
+        if (selectedFork == 0) vm.createSelectFork(vm.rpcUrl(TARGETED_CHAIN));
+
+        require(address(recovery) != address(0), "0 recovery");
+        uint256 length = inputs.length;
+        require(length > 0, "ERC721 zero length");
+
+        for (uint256 i; i < length; i++) {
+            require(inputs[i].token != address(0), "ERC721 token 0 address");
+            require(inputs[i].tokenIds.length > 0, "ERC721 empty tokenIds");
+        }
+
+        vm.startBroadcast(BROADCASTER);
+        recovery.recoverERC721(inputs);
+        
+        address owner = recovery.owner();
+        console.log("> Recovered ERC721 tokens:");
+        for (uint256 i; i < length; i++) {
+            IERC721 token = IERC721(inputs[i].token);
+            console.log(" > token %s tokenIds:", i + 1);
+            uint256 tokenIdsLength = inputs[i].tokenIds.length;
+            for (uint256 j; j < tokenIdsLength; j++) {
+                uint256 tokenId = inputs[i].tokenIds[j];
+                require(token.ownerOf(tokenId) == owner, "owner not recieved tokenId");
+                console.log("  > #%s", tokenId);
+            }
+        }
+    }
+
+    function _recoverERC1155(IRecovery.ERC1155Data[] memory inputs) public {
+        if (selectedFork == 0) vm.createSelectFork(vm.rpcUrl(TARGETED_CHAIN));
+
+        require(address(recovery) != address(0), "0 recovery");
+        uint256 length = inputs.length;
+        require(length > 0, "ERC1155 zero length");
+
+        for (uint256 i; i < length; i++) {
+            require(inputs[i].token != address(0), "ERC1155 token 0 address");
+            require(inputs[i].ids.length > 0, "ERC1155 empty ids");
+        }
+
+        vm.startBroadcast(BROADCASTER);
+        recovery.recoverERC1155(inputs);
+
+        address owner = recovery.owner();
+        console.log("> Recovered ERC1155 tokens:");
+        for (uint256 i; i < length; i++) {
+            IERC1155 token = IERC1155(inputs[i].token);
+            console.log(" > token %s ids:", i + 1);
+            uint256 tokenIdsLength = inputs[i].ids.length;
+            for (uint256 j; j < tokenIdsLength; j++) {
+                uint256 id = inputs[i].ids[j];
+                uint256 value = inputs[i].values[j];
+                require(token.balanceOf(owner, id) == value, "");
+                console.log("  > #%s: %s", id, value);
+            }
+        }
     }
 }

@@ -115,7 +115,7 @@ Example output:
    > 1106.791111111110000000 Immutable X
 ```
 
-- You may explore `DeployRecovery`, `NativeRecovery`, and `ERC20Recovery` according to your needs.
+- You may explore `DeployRecovery`, `NativeRecovery`, `ERC721Recovery`, `ERC1155Recovery`, and `ERC20Recovery` according to your needs.
 
 ## Funds List
 
