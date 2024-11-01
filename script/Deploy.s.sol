@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.15;
+pragma solidity 0.8.28;
 
 import {Recovery} from "../src/Recovery.sol";
 import {Base} from "./Base.sol";

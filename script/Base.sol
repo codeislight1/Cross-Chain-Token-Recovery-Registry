@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.15;
+pragma solidity 0.8.28;
 
 import {Recovery} from "../src/Recovery.sol";
 import {console} from "forge-std/src/console.sol";
@@ -16,11 +16,7 @@ abstract contract Base is Script {
     function _deployRecovery() internal {
         selectedFork = vm.createSelectFork(vm.rpcUrl(ORIGINAL_CHAIN));
         require(TARGETED_CONTRACT.code.length > 0, "!contract"); // ensure contract
-        require(
-            computeCreateAddress(BROADCASTER, TARGETED_NONCE) ==
-                TARGETED_CONTRACT,
-            "!computeTarget"
-        );
+        require(computeCreateAddress(BROADCASTER, TARGETED_NONCE) == TARGETED_CONTRACT, "!computeTarget");
 
         selectedFork = vm.createSelectFork(vm.rpcUrl(TARGETED_CHAIN));
         uint256 deployerNonce = vm.getNonce(BROADCASTER);
@@ -35,7 +31,7 @@ abstract contract Base is Script {
                 recovery = new Recovery(BROADCASTER);
             } else {
                 // send self transaction
-                (bool success, ) = BROADCASTER.call{value: 0}("");
+                (bool success,) = BROADCASTER.call{value: 0}("");
                 require(success, "!SELF");
             }
             txCount++;
@@ -44,18 +40,14 @@ abstract contract Base is Script {
 
         console.log("> Deployed Recovery:", address(recovery));
 
-        require(
-            address(recovery) == TARGETED_CONTRACT &&
-                address(recovery) != address(0),
-            "!target"
-        );
+        require(address(recovery) == TARGETED_CONTRACT && address(recovery) != address(0), "!target");
     }
 
     function _recoverNative() public {
         if (selectedFork == 0) vm.createSelectFork(vm.rpcUrl(TARGETED_CHAIN));
 
         require(address(recovery) != address(0), "0 recovery");
-        uint balance = recovery.owner().balance;
+        uint256 balance = recovery.owner().balance;
         vm.startBroadcast(BROADCASTER);
         recovery.recoverNative();
         vm.stopBroadcast();
@@ -63,12 +55,7 @@ abstract contract Base is Script {
         require(difference > 0, "0 native");
         uint256 wholePart = difference / 1e18;
         uint256 decimalPart = difference % 1e18;
-        console.log(
-            "> Recovered Native: %s.%s %s",
-            wholePart,
-            decimalPart,
-            _getChainTicker()
-        );
+        console.log("> Recovered Native: %s.%s %s", wholePart, decimalPart, _getChainTicker());
     }
 
     function _recoverERC20() public {

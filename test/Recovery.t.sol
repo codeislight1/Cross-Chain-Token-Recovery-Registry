@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.15;
+pragma solidity 0.8.28;
 
 import {Test} from "forge-std/src/Test.sol";
-import {ERC20} from "@solmate/src/tokens/ERC20.sol";
+import {ERC20} from "solmate/src/tokens/ERC20.sol";
 import {Recovery} from "../src/Recovery.sol";
 
 contract MockERC20 is ERC20 {
@@ -24,8 +24,7 @@ contract RecoveryTest is Test {
         recovery.recoverNative();
 
         address[] memory empty_addresses = new address[](0);
-        Recovery.BackupData[]
-            memory empty_backupDatas = new Recovery.BackupData[](0);
+        Recovery.BackupData[] memory empty_backupDatas = new Recovery.BackupData[](0);
 
         vm.expectRevert("UNAUTHORIZED");
         recovery.recoverERC20(empty_addresses);
@@ -63,11 +62,7 @@ contract RecoveryTest is Test {
         inputs[0] = Recovery.BackupData({
             to: address(mock),
             value: 0,
-            data: abi.encodeWithSignature(
-                "transfer(address,uint256)",
-                address(owner),
-                value
-            )
+            data: abi.encodeWithSignature("transfer(address,uint256)", address(owner), value)
         });
 
         vm.prank(owner);

@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.15;
+pragma solidity 0.8.28;
 
-import {Owned} from "@solmate/src/auth/Owned.sol";
-import {ERC20} from "@solmate/src/tokens/ERC20.sol";
-import {SafeTransferLib} from "@solmate/src/utils/SafeTransferLib.sol";
+import {Owned} from "solmate/src/auth/Owned.sol";
+import {ERC20} from "solmate/src/tokens/ERC20.sol";
+import {SafeTransferLib} from "solmate/src/utils/SafeTransferLib.sol";
 
-/** Funds Recovery Contract
+/**
+ * Funds Recovery Contract
  * @author CodeIsLight1
  * @dev includes Native, ERC20 and general multicall as a backup.
  */
@@ -34,9 +35,7 @@ contract Recovery is Owned {
     function backup(BackupData[] calldata inputs) external onlyOwner {
         uint256 len = inputs.length;
         for (uint256 i; i < len; i++) {
-            (bool success, ) = inputs[i].to.call{value: inputs[i].value}(
-                inputs[i].data
-            );
+            (bool success,) = inputs[i].to.call{value: inputs[i].value}(inputs[i].data);
             require(success, "!CALL");
         }
     }
