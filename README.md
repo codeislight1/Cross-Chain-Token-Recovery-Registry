@@ -1,10 +1,11 @@
 # Cross-Chain Token Recovery Registry 💰
 
-> ⚠️ **Time Sensitive**: Recovery is only possible if the target nonce hasn't been used on the destination chain yet.
+> [!IMPORTANT]
+> Recovery is only possible if the target nonce hasn't been used on the destination chain yet.
 
 ## Overview
 
-This repository helps recover funds that were mistakenly sent to token contract addresses on wrong blockchains. While these funds might appear permanently lost, they can be recovered due to how Ethereum Virtual Machine (EVM) derives contract addresses through the CREATE opcode.
+This repository helps recover funds mistakenly sent to token contract addresses on wrong blockchains. While such funds may appear permanently lost, they can be recovered due to how the Ethereum Virtual Machine (EVM) derives contract addresses through the `CREATE` opcode. This repository also [lists](#funds-list) projects capable of recovering funds if the nonce remains unused on the affected chains and the original deployer's private key is still available.
 
 ### Why This Matters
 
@@ -13,16 +14,19 @@ When a contract is deployed, its address is deterministically generated from:
 1. The deployer's address
 2. The deployment nonce
 
-This means funds sent to a contract address on Chain A can be recovered on Chain B by deploying a recovery contract at the same nonce.
+> Technically, it's `address computedAddress = keccak256(rlpEncode([deployerAddress, deployerNonce]))[12:]`.
+
+This means funds sent to a contract address on chain `A` can be recovered on chain `B` by deploying a recovery contract at the same nonce.
 
 ### Example Scenario
 
-- Original: Token deployed on Ethereum at [nonce 46](https://etherscan.io/tx/0x0885b9e5184f497595e1ae2652d63dbdb2785de2e498af837d672f5765f28430)
-- Problem: User sends [82 ETH](https://arbiscan.io/tx/0x811cf7ac6f6c10d443fdcb40bc08a8f161274bf3b6d3b03a2be94bcb43706992) to same address on Arbitrum
-- Solution: Deploy recovery contract on Arbitrum using nonce 46
-- Result: Funds become accessible through the recovery contract
+- Target chain: Token deployed on Ethereum at [nonce 46](https://etherscan.io/tx/0x0885b9e5184f497595e1ae2652d63dbdb2785de2e498af837d672f5765f28430).
+- Problem: User sends [82 ETH](https://arbiscan.io/tx/0x811cf7ac6f6c10d443fdcb40bc08a8f161274bf3b6d3b03a2be94bcb43706992) to same address on Arbitrum.
+- Solution: Deploy recovery contract on Arbitrum using nonce 46.
+- Result: Funds become accessible through the recovery contract.
 
-> 🚫 **Note**: Funds on ZkSync are unrecoverable due to different contract address derivation.
+> [!NOTE]
+> Currently, funds stuck on ZKsync cannot be recovered due to differences in contract address derivation. However, this may change in the future.
 
 ## Setup
 
@@ -36,8 +40,8 @@ This means funds sent to a contract address on Chain A can be recovered on Chain
 
 ```shell
 # Clone repository
-git clone https://github.com/codeislight1/FundsRecoveryInitiative
-cd FundsRecoveryInitiative
+git clone https://github.com/pcaversaccio/Cross-Chain-Token-Recovery-Registry.git
+cd Cross-Chain-Token-Recovery-Registry
 
 # Install dependencies
 forge install
@@ -66,11 +70,11 @@ polygon = "https://rpc.ankr.com/polygon"
 Update settings in `./script/constants.sol`:
 
 ```solidity
-string constant ORIGINAL_CHAIN = "bsc";     // Chain where contract was originally deployed
-string constant TARGETED_CHAIN = "eth";       // Chain where funds are stuck
-uint256 constant TARGETED_NONCE = 4;         // Original deployment nonce
+string constant ORIGINAL_CHAIN = "bsc"; // Chain where contract was originally deployed.
+string constant TARGETED_CHAIN = "eth"; // Chain where funds are stuck.
+uint256 constant TARGETED_NONCE = 4; // Original deployment nonce.
 address constant TARGETED_CONTRACT = 0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56;
-address constant broadcaster = 0xF07C30E4CD6cFff525791B4b601bD345bded7f47; // deployer address
+address constant broadcaster = 0xF07C30E4CD6cFff525791B4b601bD345bded7f47; // Deployer address.
 ```
 
 ## Usage
@@ -87,15 +91,15 @@ address[] updatedTokens = [
 
 2. Run recovery script:
 
-> [!WARNING]
-> only append "--broadcast --private-key YOUR_PRIVATE_KEY" to the command when executing the recovery
+> [!CAUTION]
+> Only append `--broadcast --private-key YOUR_PRIVATE_KEY` to the command when executing the recovery!
 
 ```shell
 # Dry run (simulation)
-forge script DeployRecovery
+forge script DeployRecovery --via-ir
 
 # Actual recovery (requires private key)
-forge script DeployRecovery --broadcast --private-key YOUR_PRIVATE_KEY
+forge script DeployRecovery --via-ir --broadcast --private-key YOUR_PRIVATE_KEY
 ```
 
 Example output:
@@ -111,9 +115,11 @@ Example output:
    > 1106.791111111110000000 Immutable X
 ```
 
-- You may explore "DeployRecovery" and "NativeRecovery" and "ERC20Recovery" according to your needs.
+- You may explore `DeployRecovery`, `NativeRecovery`, `ERC721Recovery`, `ERC1155Recovery`, and `ERC20Recovery` according to your needs.
 
 ## Funds List
+
+Date: 1 November 2024.
 
 ### 1. List By Asset Name
 
