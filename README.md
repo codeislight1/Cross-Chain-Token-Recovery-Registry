@@ -96,10 +96,10 @@ address[] updatedTokens = [
 
 ```shell
 # Dry run (simulation)
-forge script DeployRecovery
+forge script DeployRecovery --via-ir
 
 # Actual recovery (requires private key)
-forge script DeployRecovery --broadcast --private-key YOUR_PRIVATE_KEY
+forge script DeployRecovery --via-ir --broadcast --private-key YOUR_PRIVATE_KEY
 ```
 
 Example output:
