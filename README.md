@@ -26,7 +26,7 @@ This means funds sent to a contract address on chain `A` can be recovered on cha
 - Result: Funds become accessible through the recovery contract.
 
 > [!NOTE]
-> Currently, funds stuck on ZKsync cannot be recovered due to differences in contract address derivation. However, this may change in the future.
+> Currently, funds stuck on ZKsync cannot be recovered due to differences in contract address derivation.
 
 ## Setup
 
